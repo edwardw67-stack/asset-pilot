@@ -14,12 +14,26 @@ const holdings = [
   { market: 'US', ticker: 'TSLA', name: 'Tesla', value: 90210, pnl: -4200, risk: 'ATR 20 / 3.0x' },
 ];
 
+const navItems = [
+  { href: '/holdings', label: '持倉' },
+  { href: '/cash', label: '現金' },
+  { href: '/import', label: '匯入' },
+  { href: '/settings', label: '設定' },
+  { href: '/auth/login', label: '登入' },
+];
+
 export default function Home() {
   const max = Math.max(...snapshots.map((item) => item.value));
 
   return (
     <main style={{ minHeight: '100vh', padding: 32, background: '#020617' }}>
       <section style={{ maxWidth: 1120, margin: '0 auto' }}>
+        <nav style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 24 }}>
+          {navItems.map((item) => (
+            <a key={item.href} href={item.href} style={navLinkStyle}>{item.label}</a>
+          ))}
+        </nav>
+
         <div style={{ marginBottom: 32 }}>
           <p style={{ color: '#94a3b8', margin: 0 }}>Asset Pilot</p>
           <h1 style={{ fontSize: 44, margin: '8px 0', letterSpacing: -1 }}>資產追蹤與 ATR 停利儀表板</h1>
@@ -108,6 +122,14 @@ function Metric({ label, value }: { label: string; value: string }) {
     </section>
   );
 }
+
+const navLinkStyle: React.CSSProperties = {
+  border: '1px solid #334155',
+  borderRadius: 999,
+  color: '#e5e7eb',
+  padding: '8px 14px',
+  textDecoration: 'none',
+};
 
 const panelStyle: React.CSSProperties = {
   background: 'rgba(15, 23, 42, 0.9)',
