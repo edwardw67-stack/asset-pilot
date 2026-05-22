@@ -1,3 +1,5 @@
+import type React from 'react';
+
 const snapshots = [
   { date: '05/18', value: 1280000 },
   { date: '05/19', value: 1305000 },
