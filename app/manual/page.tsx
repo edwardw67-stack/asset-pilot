@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
+import { isFirstradeCsv, parseFirstradeCsv } from './firstrade';
 
 type Holding = { id: string; market: 'TW' | 'US'; ticker: string; name: string; qty: number; cost: number; price: number; atr: number; multiple: number };
 type Cash = { id: string; currency: 'TWD' | 'USD'; label: string; amount: number };
@@ -100,6 +101,18 @@ export default function ManualPage() {
   }
 
   function importCsv(text: string) {
+    if (!text.trim()) {
+      setMessage('沒有可匯入的內容');
+      return;
+    }
+
+    if (isFirstradeCsv(text)) {
+      const parsed = parseFirstradeCsv(text);
+      setData(d => ({ ...d, holdings: [...parsed.holdings, ...d.holdings], cash: [...parsed.cash, ...d.cash] }));
+      setMessage(`Firstrade 匯入完成：讀取 ${parsed.summary.totalRows} 列，買進 ${parsed.summary.buyRows} 列，賣出 ${parsed.summary.sellRows} 列，股息再投資 ${parsed.summary.reinvestRows} 列；產生 ${parsed.summary.holdingsCount} 筆持倉，估算現金 USD ${parsed.summary.estimatedCashUsd}`);
+      return;
+    }
+
     const parsed = parseImport(text);
     setData(d => ({ ...d, holdings: [...parsed.holdings, ...d.holdings], cash: [...parsed.cash, ...d.cash] }));
     setMessage(`匯入 ${parsed.holdings.length} 筆持倉、${parsed.cash.length} 筆現金${parsed.errors.length ? `；錯誤：${parsed.errors.join('；')}` : ''}`);
@@ -140,7 +153,7 @@ export default function ManualPage() {
       <section style={{ maxWidth: 1120, margin: '0 auto' }}>
         <p style={{ color: '#94a3b8' }}>Asset Pilot</p>
         <h1 style={{ fontSize: 42, margin: '8px 0 18px' }}>手動資產追蹤</h1>
-        <p style={{ color: '#94a3b8' }}>先用本機版，不卡登入。可以手動 key in、CSV 匯入，並一鍵更新目前股價。</p>
+        <p style={{ color: '#94a3b8' }}>先用本機版，不卡登入。可以手動 key in、CSV 匯入，並一鍵更新目前股價。Firstrade 交易流水帳 CSV 會自動轉成目前持倉。</p>
         {message ? <div style={notice}>{message}</div> : null}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginTop: 20 }}>
@@ -158,7 +171,7 @@ export default function ManualPage() {
 
         <section style={panel}>
           <h2>CSV 匯入</h2>
-          <p style={{ color: '#94a3b8' }}>格式：market,ticker,name,qty,cost,price,atr,multiple。現金列用 cash,currency,label,amount。</p>
+          <p style={{ color: '#94a3b8' }}>支援 Firstrade 原始 CSV。也支援簡易格式：market,ticker,name,qty,cost,price,atr,multiple。現金列用 cash,currency,label,amount。</p>
           <input type="file" accept=".csv,text/csv" onChange={onFile} style={input} />
           <textarea value={csvText} onChange={e => setCsvText(e.target.value)} placeholder="貼上 CSV" rows={6} style={{ ...input, marginTop: 10 }} />
           <button onClick={() => importCsv(csvText)} style={{ ...primary, marginTop: 10 }}>貼上內容匯入</button>
@@ -197,7 +210,7 @@ export default function ManualPage() {
             const value = twd(h.qty * h.price, h.market, data.usdTwd);
             const pnl = twd(h.qty * (h.price - h.cost), h.market, data.usdTwd);
             const stop = h.atr > 0 ? h.price - h.atr * h.multiple : null;
-            return <div key={h.id} style={row}><b>{h.market} {h.ticker} {h.name}</b><span>現價 {h.price} / 市值 {fmt(value)} / 損益 {fmt(pnl)} / ATR 停利 {stop ? stop.toFixed(2) : '-'}</span><button onClick={() => setData(d => ({ ...d, holdings: d.holdings.filter(x => x.id !== h.id) }))} style={danger}>刪除</button></div>;
+            return <div key={h.id} style={row}><b>{h.market} {h.ticker} {h.name}</b><span>股數 {h.qty} / 成本 {h.cost} / 現價 {h.price} / 市值 {fmt(value)} / 損益 {fmt(pnl)} / ATR 停利 {stop ? stop.toFixed(2) : '-'}</span><button onClick={() => setData(d => ({ ...d, holdings: d.holdings.filter(x => x.id !== h.id) }))} style={danger}>刪除</button></div>;
           })}
         </section>
 
