@@ -100,6 +100,13 @@ export default function ManualPage() {
     e.currentTarget.reset();
   }
 
+  function resetAll() {
+    if (!window.confirm('確定要刪除所有持倉與現金？這會清掉目前瀏覽器的本機資料。')) return;
+    setData(empty);
+    setCsvText('');
+    setMessage('已清空所有持倉與現金。');
+  }
+
   function importCsv(text: string) {
     if (!text.trim()) {
       setMessage('沒有可匯入的內容');
@@ -123,7 +130,6 @@ export default function ManualPage() {
     if (!file) return;
     const text = await file.text();
     importCsv(text);
-    e.target.value = '';
   }
 
   async function refreshQuotes() {
@@ -166,7 +172,8 @@ export default function ManualPage() {
         <section style={panel}>
           <h2>匯率與自動股價</h2>
           <input value={data.usdTwd} onChange={e => setData(d => ({ ...d, usdTwd: Number(e.target.value) || 0 }))} type="number" step="0.01" style={input} />
-          <button onClick={refreshQuotes} disabled={loadingQuotes} style={{ ...primary, marginTop: 12 }}>{loadingQuotes ? '更新中...' : '一鍵更新目前股價'}</button>
+          <button onClick={refreshQuotes} disabled={loadingQuotes} style={{ ...primary, marginTop: 12, marginRight: 10 }}>{loadingQuotes ? '更新中...' : '一鍵更新目前股價'}</button>
+          <button onClick={resetAll} style={{ ...danger, marginTop: 12 }}>全部清空</button>
         </section>
 
         <section style={panel}>
